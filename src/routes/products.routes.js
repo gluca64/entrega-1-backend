@@ -3,6 +3,12 @@ const router = express.Router();
 const ProductManager = require('../managers/ProductManager');
 
 const productManager = new ProductManager();
+let io = null;
+
+// para pasar el io cuando se inicialize
+function setIO(socketIO) {
+    io = socketIO;
+}
 
 // GET / - listar todos los productos
 router.get('/', (req, res) => {
@@ -34,6 +40,13 @@ router.get('/:pid', (req, res) => {
 router.post('/', (req, res) => {
     try {
         const nuevoProducto = productManager.addProduct(req.body);
+        
+        // emitir a todos los clientes websocket
+        if (io) {
+            io.emit('nuevoProducto', nuevoProducto);
+            io.emit('productsLoad', productManager.getProducts());
+        }
+        
         res.status(201).json({ status: 'success', product: nuevoProducto });
     } catch (error) {
         res.status(400).json({ status: 'error', message: error.message });
@@ -48,6 +61,11 @@ router.put('/:pid', (req, res) => {
         
         if (!productoActualizado) {
             return res.status(404).json({ status: 'error', message: 'Producto no encontrado' });
+        }
+        
+        // emitir actualización
+        if (io) {
+            io.emit('productsLoad', productManager.getProducts());
         }
         
         res.json({ status: 'success', product: productoActualizado });
@@ -66,6 +84,12 @@ router.delete('/:pid', (req, res) => {
             return res.status(404).json({ status: 'error', message: 'Producto no encontrado' });
         }
         
+        // emitir cambio a todos los clientes
+        if (io) {
+            io.emit('productoEliminado', id);
+            io.emit('productsLoad', productManager.getProducts());
+        }
+        
         res.json({ status: 'success', message: 'Producto eliminado' });
     } catch (error) {
         res.status(500).json({ status: 'error', message: error.message });
@@ -73,3 +97,4 @@ router.delete('/:pid', (req, res) => {
 });
 
 module.exports = router;
+module.exports.setIO = setIO;

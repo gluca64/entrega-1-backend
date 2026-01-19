@@ -1,0 +1,18 @@
+<h1>Tienda Deportiva</h1>
+
+{{#if productos}}
+    <div class="products-grid">
+        {{#each productos}}
+            <div class="product-card">
+                <h3>{{this.title}}</h3>
+                <p>{{this.description}}</p>
+                <span class="category">{{this.category}}</span>
+                <div class="price">${{this.price}}</div>
+                <p class="stock">Stock: {{this.stock}}</p>
+                <p>Código: {{this.code}}</p>
+            </div>
+        {{/each}}
+    </div>
+{{else}}
+    <p>No hay productos disponibles</p>
+{{/if}}
